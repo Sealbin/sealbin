@@ -1,0 +1,48 @@
+# cargo-deny configuration (issue #1). Mirrors Cratefield/harness deny.toml
+# where reachable.
+#
+# Licences: a permissive-only allowlist. Copyleft is denied simply by not being
+# in `allow` — there is deliberately no MPL/GPL/LGPL entry. If a real
+# dependency needs another *permissive* licence, add it here with a comment
+# naming the crate and why; if it needs a copyleft one, that is a decision for
+# the maintainer, not this file.
+#
+# Note: this workspace is a scaffold. `cratefield-*` and `worker` are the only
+# non-trivial dependencies resolved into Cargo.lock today; the crypto crates in
+# [workspace.dependencies] are not yet used by any member, so they are not
+# checked until an issue starts depending on them.
+
+[advisories]
+# cargo-deny v2 field layout; defaults plus yanked denial, as the harness does.
+version = 2
+yanked = "deny"
+
+[licenses]
+version = 2
+# Allowlist entries that no resolved dependency currently uses (kept for future
+# deps) are not warnings; the list stays broad on purpose.
+unused-allowed-license = "allow"
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    # foldhash (transitive via hashbrown) — OSI-approved, permissive.
+    "Zlib",
+]
+
+[bans]
+# Copyleft crates are denied by omission from [licenses].allow; these two
+# mirror the harness settings.
+multiple-versions = "warn"
+wildcards = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+# When design decision D2 forces pinning ALL cratefield-* to one git rev, allow
+# the harness repo (and only it) here, in the same change:
+#     allow-git = ["https://github.com/Cratefield/harness"]

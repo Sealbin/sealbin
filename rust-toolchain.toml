@@ -1,0 +1,8 @@
+# Matches Cratefield/harness rust-toolchain.toml (origin/main): 1.98.1.
+# `rustup` installs this channel, the two components and the wasm target from
+# this file, so CI and a fresh clone agree without pinning anywhere else.
+[toolchain]
+channel = "1.98.1"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"

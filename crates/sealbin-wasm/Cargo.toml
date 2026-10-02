@@ -1,0 +1,17 @@
+[package]
+name = "sealbin-wasm"
+description = "wasm-bindgen wrapper over sealbin-format for the browser and @sealbin/crypto"
+# publish = false until #25 flips it for the crates release.
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# The wasm-bindgen wrapper and its dependency arrive with #5, which owns the
+# browser build and the @sealbin/crypto package.
