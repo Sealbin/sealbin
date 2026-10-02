@@ -44,7 +44,7 @@ cratefield-adapter-stripe = "0.2.0"
 # the Worker runtime agreeing. The `d1` feature is enabled, as the harness
 # does: cratefield-runtime-cloudflare references `worker` with it, and #7 needs
 # D1. `worker` 0.8.5 ships no default features, so this is the whole set.
-worker = { version = "=0.8.5", default-features = false, features = ["d1"] }
+worker = { version = "=0.8.7", default-features = false, features = ["d1"] }
 # getrandom needs its opt-in wasm backend on wasm32-unknown-unknown. Enabled by
 # the wasm leaf crate (sealbin-worker), as cratefield-waitlist does.
 getrandom = { version = "0.4.3", default-features = false, features = ["wasm_js"] }
