@@ -1,0 +1,13 @@
+{
+  "name": "@sealbin/crypto",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The wasm build of sealbin-format, for browsers.",
+  "license": "Apache-2.0",
+  "homepage": "https://sealb.in",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sealbin/sealbin.git",
+    "directory": "npm/crypto"
+  }
+}

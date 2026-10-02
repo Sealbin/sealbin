@@ -1,0 +1,16 @@
+{
+  "name": "@sealbin/cli-darwin-x64",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The sealb binary for macOS x64.",
+  "license": "Apache-2.0",
+  "homepage": "https://sealb.in",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sealbin/sealbin.git",
+    "directory": "npm/cli-darwin-x64"
+  },
+  "os": ["darwin"],
+  "cpu": ["x64"],
+  "preferUnplugged": true
+}

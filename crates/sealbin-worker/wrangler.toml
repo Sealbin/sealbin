@@ -1,0 +1,12 @@
+# Cloudflare Workers configuration for the sealbin Worker. Shape copied from
+# Cratefield/harness ventures/cratefield-waitlist/wrangler.toml.
+name = "sealbin"
+main = "build/worker/shim.mjs"
+compatibility_date = "2026-10-01"
+
+[build]
+command = "worker-build --release"
+
+# No bindings yet. Issue #7 adds them: the SealObject Durable Object, the D1
+# metadata index, the R2 bucket for large ciphertext and the rate limiter.
+# Nothing else belongs here until an issue needs it.

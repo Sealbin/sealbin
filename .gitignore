@@ -1,0 +1,22 @@
+# Rust
+/target
+
+# The Worker bundle worker-build emits (crates/sealbin-worker/wrangler.toml ->
+# `main = "build/worker/shim.mjs"`).
+crates/sealbin-worker/build/
+
+# Node / Wrangler / Wrangler dev secrets
+node_modules/
+.wrangler/
+.dev.vars
+
+# Credential files. Never commit these; several are read by tools from the
+# working directory and would leak live keys.
+.env
+.env.*
+!.env.example
+.envrc
+.git-credentials
+.netrc
+.npmrc
+.pypirc

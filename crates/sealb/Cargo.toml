@@ -1,0 +1,16 @@
+[package]
+name = "sealb"
+description = "The sealb command-line tool (and, later, `sealb mcp`: an MCP server over stdio)"
+# publish = false until #25 flips it for the crates release.
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# No dependencies at the scaffold. `sealb mcp` (#18-#23) brings the MCP stack in.

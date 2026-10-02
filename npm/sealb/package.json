@@ -1,0 +1,24 @@
+{
+  "name": "sealb",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Resolves the platform binary and execs it: the sealb.in handoff CLI.",
+  "license": "Apache-2.0",
+  "homepage": "https://sealb.in",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sealbin/sealbin.git",
+    "directory": "npm/sealb"
+  },
+  "bin": {
+    "sealb": "bin/sealb.js"
+  },
+  "optionalDependencies": {
+    "@sealbin/cli-darwin-arm64": "0.1.0",
+    "@sealbin/cli-darwin-x64": "0.1.0",
+    "@sealbin/cli-linux-x64-gnu": "0.1.0",
+    "@sealbin/cli-linux-arm64-gnu": "0.1.0",
+    "@sealbin/cli-linux-x64-musl": "0.1.0",
+    "@sealbin/cli-win32-x64": "0.1.0"
+  }
+}

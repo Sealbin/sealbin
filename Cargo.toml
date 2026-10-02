@@ -1,0 +1,89 @@
+# The sealbin workspace. One Rust workspace, deployed as a Cloudflare Worker.
+# Issue #1 creates every crate as a compiling stub so later issues never edit
+# the member list. See docs/design/decisions.md (D1, D2) and README.md.
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+license = "Apache-2.0"
+repository = "https://github.com/sealbin/sealbin"
+homepage = "https://sealb.in"
+
+[workspace.dependencies]
+# --- The Cratefield harness (design decision D2) ---
+# Every `cratefield-*` crate MUST come from ONE source. Two copies of
+# cratefield-core in one dependency graph pull two incompatible copies of the
+# harness types and do not compile against each other.
+#
+# Here they come from crates.io on the current line (core 0.6.x,
+# runtime-cloudflare 0.2.x). When an unreleased harness change is needed, pin
+# ALL of them to the SAME git rev at once — never a mix of crates.io and git:
+#
+#     cratefield-core = { git = "https://github.com/Cratefield/harness", rev = "<sha>" }
+#     cratefield-runtime-cloudflare = { git = "https://github.com/Cratefield/harness", rev = "<sha>" }
+#     cratefield-testing = { git = "https://github.com/Cratefield/harness", rev = "<sha>" }
+#     cratefield-auth-client = { git = "https://github.com/Cratefield/harness", rev = "<sha>" }
+#     cratefield-adapter-stripe = { git = "https://github.com/Cratefield/harness", rev = "<sha>" }
+#
+# and add `allow-git = ["https://github.com/Cratefield/harness"]` to the
+# [sources] section of deny.toml in the same change. Never `factory0-*`: those
+# were renamed to `cratefield-*` (0.6.0, published 2026-09-28).
+cratefield-core = "0.6.0"
+cratefield-runtime-cloudflare = "0.2.0"
+cratefield-testing = "0.3.0"
+cratefield-auth-client = "0.2.0"
+cratefield-adapter-stripe = "0.2.0"
+
+# --- Cloudflare Workers runtime ---
+# `=0.8.5` because that is the version cratefield-runtime-cloudflare 0.2.0
+# requires (`worker ^0.8.5`), and pinning it keeps the shim, worker-build and
+# the Worker runtime agreeing. The `d1` feature is enabled, as the harness
+# does: cratefield-runtime-cloudflare references `worker` with it, and #7 needs
+# D1. `worker` 0.8.5 ships no default features, so this is the whole set.
+worker = { version = "=0.8.5", default-features = false, features = ["d1"] }
+# getrandom needs its opt-in wasm backend on wasm32-unknown-unknown. Enabled by
+# the wasm leaf crate (sealbin-worker), as cratefield-waitlist does.
+getrandom = { version = "0.4.3", default-features = false, features = ["wasm_js"] }
+
+# --- Serialisation, errors, async ---
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+async-trait = "0.1"
+
+# --- Crypto for the handoff format (D5) ---
+# Pinned to the RustCrypto 0.11 / 0.13 line so hkdf, pbkdf2 and aes-gcm all
+# share the single `sha2` 0.11 + `digest` 0.11 + `aead` 0.6 stack the harness
+# already pulls; a 0.10-line crate would drag a second digest stack in.
+aes-gcm = { version = "0.11.1", default-features = false, features = ["aes", "alloc", "zeroize"] }
+hkdf = "0.13.0"
+sha2 = "0.11.0"
+pbkdf2 = "0.13.0"
+zeroize = { version = "1.8", features = ["zeroize_derive"] }
+
+# --- This workspace's own crates ---
+# Path dependencies here so later issues depend on them with `.workspace = true`.
+sealbin-format = { path = "crates/sealbin-format", version = "0.1.0" }
+sealbin-core = { path = "crates/sealbin-core", version = "0.1.0" }
+sealbin-server = { path = "crates/sealbin-server", version = "0.1.0" }
+sealbin-worker = { path = "crates/sealbin-worker", version = "0.1.0" }
+sealbin-wasm = { path = "crates/sealbin-wasm", version = "0.1.0" }
+sealb = { path = "crates/sealb", version = "0.1.0" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+
+# Smallest Worker bundle. Mirrors the profile cratefield-waitlist carried as a
+# standalone repo (`opt-level = "s"`, `lto = true`); `worker-build --release`
+# also runs wasm-opt, which is the bigger size lever.
+[profile.release]
+opt-level = "s"
+lto = true

@@ -1,0 +1,19 @@
+{
+  "name": "@sealbin/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Runs `sealb mcp`, the sealb.in MCP server over stdio.",
+  "license": "Apache-2.0",
+  "homepage": "https://sealb.in",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sealbin/sealbin.git",
+    "directory": "npm/mcp"
+  },
+  "bin": {
+    "sealbin-mcp": "bin/mcp.js"
+  },
+  "dependencies": {
+    "sealb": "0.1.0"
+  }
+}

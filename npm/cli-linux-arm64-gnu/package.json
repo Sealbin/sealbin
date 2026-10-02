@@ -1,0 +1,17 @@
+{
+  "name": "@sealbin/cli-linux-arm64-gnu",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The sealb binary for Linux arm64 (glibc).",
+  "license": "Apache-2.0",
+  "homepage": "https://sealb.in",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sealbin/sealbin.git",
+    "directory": "npm/cli-linux-arm64-gnu"
+  },
+  "os": ["linux"],
+  "cpu": ["arm64"],
+  "libc": ["glibc"],
+  "preferUnplugged": true
+}
