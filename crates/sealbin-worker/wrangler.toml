@@ -1,5 +1,10 @@
 # Cloudflare Workers configuration for the sealbin Worker. Shape copied from
 # Cratefield/harness ventures/cratefield-waitlist/wrangler.toml.
+#
+# Wrangler does NOT inherit bindings or vars into an `[env.*]` block, so the
+# top-level (local dev) shape is repeated verbatim under each env with only the
+# names, ids and routes changed. `Needs-human:` marks a placeholder to replace
+# from the account; the runbook is crates/sealbin-worker/README.md.
 name = "sealbin"
 main = "build/worker/shim.mjs"
 compatibility_date = "2026-10-01"
@@ -7,6 +12,134 @@ compatibility_date = "2026-10-01"
 [build]
 command = "worker-build --release"
 
-# No bindings yet. Issue #7 adds them: the SealObject Durable Object, the D1
-# metadata index, the R2 bucket for large ciphertext and the rate limiter.
-# Nothing else belongs here until an issue needs it.
+[observability]
+enabled = true
+
+# --- local dev bindings (also the default when no --env is passed) ---------
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sealbin-staging"
+# Needs-human: from `wrangler d1 create sealbin-staging`.
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "SEALS"
+bucket_name = "sealbin-seals-staging"
+
+[[durable_objects.bindings]]
+name = "SEAL_OBJECTS"
+class_name = "SealObject"
+
+# Rate-limit namespace ids are account-wide and manual. Needs-human: confirm
+# 1017 is unused on the Factory0 account (the waitlist uses 1016).
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1017"
+simple = { limit = 100, period = 60 }
+
+[assets]
+directory = "../../web/dist"
+binding = "ASSETS"
+# The Worker must see the request first (it decides /s/ and /activate), then
+# hands it to the assets binding with an explicit path. `html_handling = "none"`
+# serves files at their literal path, so lib.rs's rewrite cannot be flipped by
+# the auto-trailing-slash redirect.
+run_worker_first = true
+html_handling = "none"
+
+[vars]
+ENV = "development"
+SEALBIN_API_URL = "http://localhost:8787"
+SEALBIN_PUBLIC_URL = "http://localhost:8787"
+
+# Durable Object class migrations are top-level only; they apply to every env.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SealObject"]
+
+# --- staging ---------------------------------------------------------------
+
+[env.staging]
+workers_dev = true
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "sealbin-staging"
+# Needs-human: from `wrangler d1 create sealbin-staging`.
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[env.staging.r2_buckets]]
+binding = "SEALS"
+bucket_name = "sealbin-seals-staging"
+
+[[env.staging.durable_objects.bindings]]
+name = "SEAL_OBJECTS"
+class_name = "SealObject"
+
+[[env.staging.unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1017"
+simple = { limit = 100, period = 60 }
+
+[env.staging.assets]
+directory = "../../web/dist"
+binding = "ASSETS"
+run_worker_first = true
+html_handling = "none"
+
+[env.staging.vars]
+ENV = "staging"
+# Needs-human: the workers.dev subdomain is unknown; replace `factory0` with the
+# account's and confirm the URL with `wrangler whoami`.
+SEALBIN_API_URL = "https://sealbin-staging.factory0.workers.dev"
+SEALBIN_PUBLIC_URL = "https://sealbin-staging.factory0.workers.dev"
+
+# --- production ------------------------------------------------------------
+
+[env.production]
+workers_dev = false
+routes = [
+  # Needs-human: the sealb.in zone must exist in the account and the Pages
+  # project keep every path but the three below (D3).
+  { pattern = "api.sealb.in", custom_domain = true },
+  { pattern = "sealb.in/s/*", zone_name = "sealb.in" },
+  { pattern = "sealb.in/activate*", zone_name = "sealb.in" },
+  { pattern = "sealb.in/.well-known/sealbin", zone_name = "sealb.in" },
+]
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "sealbin"
+# Needs-human: from `wrangler d1 create sealbin`.
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[env.production.r2_buckets]]
+binding = "SEALS"
+bucket_name = "sealbin-seals"
+
+[[env.production.durable_objects.bindings]]
+name = "SEAL_OBJECTS"
+class_name = "SealObject"
+
+[[env.production.unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1017"
+simple = { limit = 100, period = 60 }
+
+[env.production.assets]
+directory = "../../web/dist"
+binding = "ASSETS"
+run_worker_first = true
+html_handling = "none"
+
+[env.production.vars]
+ENV = "production"
+SEALBIN_API_URL = "https://api.sealb.in"
+SEALBIN_PUBLIC_URL = "https://sealb.in"

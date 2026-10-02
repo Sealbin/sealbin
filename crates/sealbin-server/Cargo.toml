@@ -15,3 +15,11 @@ workspace = true
 [dependencies]
 # The harness kernel: `Module`, `Harness`, ports and errors (D1, D10).
 cratefield-core = { workspace = true }
+# The `/.well-known/sealbin` document is JSON.
+serde_json = { workspace = true }
+
+[dev-dependencies]
+# The conformance kit: fake ports and the no-network request helpers.
+cratefield-testing = { workspace = true }
+# An executor for the kit's async request helpers (`#[pollster::test]`).
+pollster = { workspace = true }

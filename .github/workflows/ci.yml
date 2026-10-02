@@ -108,6 +108,32 @@ jobs:
         with:
           command: check
 
+  smoke:
+    name: smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.98.1"
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Install worker-build (pinned to the worker 0.8.7 line)
+        run: cargo install --locked worker-build --version 0.8.7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install wrangler
+        run: npm i -g wrangler@4
+      - name: Build the Worker bundle
+        working-directory: crates/sealbin-worker
+        run: worker-build --release
+      # Starts `wrangler dev --local` with a random HARNESS_SECRET against a
+      # throwaway --persist-to: no account, no remote binding, no secret on the
+      # log. See crates/sealbin-worker/tests/smoke.sh.
+      - name: Smoke test the Worker
+        run: bash crates/sealbin-worker/tests/smoke.sh
+
   worker-size:
     name: worker size
     runs-on: ubuntu-latest

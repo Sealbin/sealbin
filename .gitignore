@@ -5,6 +5,10 @@
 # `main = "build/worker/shim.mjs"`).
 crates/sealbin-worker/build/
 
+# The static assets the Worker serves: `web/build.sh` regenerates them and
+# wrangler reads them from crates/sealbin-worker/wrangler.toml `[assets]`.
+web/dist/
+
 # Node / Wrangler / Wrangler dev secrets
 node_modules/
 .wrangler/
