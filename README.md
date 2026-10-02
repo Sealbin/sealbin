@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/STATUS-PLANNED-8C98FF?style=flat-square&labelColor=07080B" alt="Status: planned">
+  <img src="https://img.shields.io/badge/STATUS-IN%20DEVELOPMENT-8C98FF?style=flat-square&labelColor=07080B" alt="Status: in development">
   <img src="https://img.shields.io/badge/LANGUAGE-RUST-E7E9EC?style=flat-square&labelColor=07080B" alt="Language: Rust">
   <img src="https://img.shields.io/badge/RUNTIME-CLOUDFLARE%20WORKERS-E7E9EC?style=flat-square&labelColor=07080B" alt="Runtime: Cloudflare Workers">
   <img src="https://img.shields.io/badge/HARNESS-CRATEFIELD-E7E9EC?style=flat-square&labelColor=07080B" alt="Harness: Cratefield">
@@ -27,10 +27,10 @@
   <a href="https://sealb.in/#access">Early access</a>
 </p>
 
-> **Not built yet.** This repository holds the plan, as 47 self-contained issues and a decisions
-> document; the code lands issue by issue. Nothing here can be installed today. The npm names
-> `sealb`, `sealbin`, `@sealbin/mcp` and `@sealbin/crypto` are reserved placeholders that print
-> "not released yet" and exit. Early access is a waitlist at [sealb.in](https://sealb.in/#access).
+> **In development.** The workspace scaffold is in ([#1](https://github.com/Sealbin/sealbin/issues/1)); the rest lands issue by issue —
+> the plan is in the [issues](https://github.com/Sealbin/sealbin/issues) and the [design decisions](docs/design/decisions.md).
+> Nothing can be installed yet: the npm names `sealb`, `sealbin`, `@sealbin/mcp` and `@sealbin/crypto` are reserved
+> placeholders that print "not released yet" and exit. Early access is a waitlist at [sealb.in](https://sealb.in/#access).
 
 ---
 
@@ -52,10 +52,10 @@ sequenceDiagram
     A->>A: encrypt locally (AES-256-GCM), key K stays here
     A->>S: upload ciphertext only, burn-after-read or TTL
     S-->>A: https://sealb.in/s/k7Qx9pL2
-    A-->>B: link + #key=K (the #fragment is never sent to a server)
+    A-->>B: link with key K in the URL fragment (never sent to a server)
     B->>S: open, proving it holds the key
     S-->>B: ciphertext, exactly once
-    S->>S: delete; every later open gets 410 Gone
+    S->>S: delete, every later open gets 410 Gone
     B->>B: decrypt, files land on disk (not in the context window)
 ```
 
@@ -98,7 +98,7 @@ and Hermes Agent, plus a GitHub Actions step.
 
 ## Security model
 
-| | |
+| Case | What happens |
 | :--- | :--- |
 | **The server sees** | ciphertext, its size, expiry, whether it was read, which API key sealed it |
 | **The server never sees** | the plaintext or the key (it travels in the link's `#fragment`) |
@@ -160,7 +160,7 @@ exact scope, testable acceptance criteria, what is out of scope, and what it dep
    signature). Do the rest and leave that step as a documented runbook item.
 4. Never commit or print secrets, and never weaken the security model above to make a test pass.
 
-`AGENTS.md`, the checks and the CI arrive with the scaffold ([#1](https://github.com/Sealbin/sealbin/issues/1)).
+Start with [`AGENTS.md`](AGENTS.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md); [`SECURITY.md`](SECURITY.md) covers reporting vulnerabilities.
 
 ## Related repositories
 
@@ -178,5 +178,5 @@ exact scope, testable acceptance criteria, what is out of scope, and what it dep
   &nbsp;·&nbsp;
   a <a href="https://factory0.ventures">Factory Zero</a> venture
   &nbsp;·&nbsp;
-  Apache-2.0 once the scaffold lands
+  Apache-2.0
 </p>
