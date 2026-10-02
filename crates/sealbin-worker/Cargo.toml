@@ -19,6 +19,12 @@ workspace = true
 worker = { workspace = true }
 cratefield-core = { workspace = true }
 cratefield-runtime-cloudflare = { workspace = true }
+# The harness modules this venture composes (`Seals`, then `agents`, … — D1, D10).
+sealbin-server = { workspace = true }
+
+# `#[durable_object]` needs `wasm_bindgen::…` resolvable by name (see the root
+# manifest); declared here so the Worker crate can name it.
+wasm-bindgen = { workspace = true }
 
 # getrandom's opt-in wasm backend (see the workspace manifest). Only on wasm, so
 # a native `cargo test` / `cargo clippy` never pulls it.

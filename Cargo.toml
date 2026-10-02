@@ -48,12 +48,20 @@ worker = { version = "=0.8.7", default-features = false, features = ["d1"] }
 # getrandom needs its opt-in wasm backend on wasm32-unknown-unknown. Enabled by
 # the wasm leaf crate (sealbin-worker), as cratefield-waitlist does.
 getrandom = { version = "0.4.3", default-features = false, features = ["wasm_js"] }
+# `#[durable_object]` expands `#[wasm_bindgen]` over a struct, and that expansion
+# resolves `wasm_bindgen::…` by crate name rather than through the
+# `wasm_bindgen = ::worker::wasm_bindgen` rename (worker-macros 0.8.7
+# durable_object.rs), so the crate must be nameable in the dependant. Pinned to
+# worker 0.8.7's own `wasm-bindgen` so no second copy enters the graph.
+wasm-bindgen = "=0.2.129"
 
 # --- Serialisation, errors, async ---
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
 async-trait = "0.1"
+# Drives the cratefield-testing async request helpers in tests (`#[pollster::test]`).
+pollster = { version = "0.4", features = ["macro"] }
 
 # --- Crypto for the handoff format (D5) ---
 # Pinned to the RustCrypto 0.11 / 0.13 line so hkdf, pbkdf2 and aes-gcm all
