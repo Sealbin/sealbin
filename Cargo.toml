@@ -19,8 +19,8 @@ homepage = "https://sealb.in"
 # cratefield-core in one dependency graph pull two incompatible copies of the
 # harness types and do not compile against each other.
 #
-# Here they come from crates.io on the current line (core 0.6.x,
-# runtime-cloudflare 0.2.x). When an unreleased harness change is needed, pin
+# Here they come from crates.io on the current line (core 0.7.x,
+# runtime-cloudflare 0.3.x). When an unreleased harness change is needed, pin
 # ALL of them to the SAME git rev at once — never a mix of crates.io and git:
 #
 #     cratefield-core = { git = "https://github.com/Cratefield/harness", rev = "<sha>" }
@@ -32,14 +32,14 @@ homepage = "https://sealb.in"
 # and add `allow-git = ["https://github.com/Cratefield/harness"]` to the
 # [sources] section of deny.toml in the same change. Never `factory0-*`: those
 # were renamed to `cratefield-*` (0.6.0, published 2026-09-28).
-cratefield-core = "0.6.0"
-cratefield-runtime-cloudflare = "0.2.0"
-cratefield-testing = "0.3.0"
-cratefield-auth-client = "0.2.0"
-cratefield-adapter-stripe = "0.2.0"
+cratefield-core = "0.7.0"
+cratefield-runtime-cloudflare = "0.3.0"
+cratefield-testing = "0.4.0"
+cratefield-auth-client = "0.2.1"
+cratefield-adapter-stripe = "0.2.1"
 
 # --- Cloudflare Workers runtime ---
-# `=0.8.5` because that is the version cratefield-runtime-cloudflare 0.2.0
+# `=0.8.5` because that is the version cratefield-runtime-cloudflare 0.3.0
 # requires (`worker ^0.8.5`), and pinning it keeps the shim, worker-build and
 # the Worker runtime agreeing. The `d1` feature is enabled, as the harness
 # does: cratefield-runtime-cloudflare references `worker` with it, and #7 needs
