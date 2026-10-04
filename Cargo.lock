@@ -1148,8 +1148,12 @@ version = "0.1.0"
 dependencies = [
  "cratefield-core",
  "cratefield-testing",
+ "getrandom",
  "pollster 1.0.1",
+ "sea-query",
+ "serde",
  "serde_json",
+ "time",
 ]
 
 [[package]]

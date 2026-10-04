@@ -17,6 +17,25 @@ workspace = true
 cratefield-core = { workspace = true }
 # The `/.well-known/sealbin` document is JSON.
 serde_json = { workspace = true }
+# Request/response bodies for the accounts and agents routes.
+serde = { workspace = true }
+# Bound `?` values for the accounts/agents store (D11, D12): placeholders,
+# never interpolated values. Only the value type is used, so no backend
+# feature — the harness renders every statement.
+sea-query = { version = "0.32.7", default-features = false, features = [
+    "thread-safe",
+] }
+# OS entropy for minting agent keys; `crypto.getRandomValues` on wasm.
+getrandom = { workspace = true }
+# RFC 3339 stamps for the accounts/agents rows. `Clock::now` answers a
+# `time::OffsetDateTime`, and the harness's `ApiKeys` writes its timestamps
+# with this crate's `Rfc3339` formatter — matching it is what keeps
+# `ORDER BY created_at` consistent across the two tables. Already in the graph
+# via `cratefield-core`, so no new crate.
+time = { version = "0.3.45", default-features = false, features = [
+    "std",
+    "formatting",
+] }
 
 [dev-dependencies]
 # The conformance kit: fake ports and the no-network request helpers.
