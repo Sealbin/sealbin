@@ -15,3 +15,9 @@ workspace = true
 [dependencies]
 # No harness dependency on purpose (D1): the domain stays testable as plain
 # Rust and usable from the CLI.
+serde.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+serde_json.workspace = true
