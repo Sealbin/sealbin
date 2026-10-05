@@ -73,6 +73,21 @@ hkdf = "0.13.0"
 sha2 = "0.11.0"
 pbkdf2 = "0.13.0"
 zeroize = { version = "1.8", features = ["zeroize_derive"] }
+# `subtle` for constant-time comparison (D6: the read verifier is compared in
+# constant time). `rand_core` 0.10 is the version the RustCrypto 0.11/aead 0.6
+# stack re-exports, so the crate and the test RNG share one `rand_core`.
+# Default features are off: `rand_core` then pulls no `getrandom`, which keeps
+# the `wasm32-unknown-unknown` build free of an RNG backend the crate must not
+# use (randomness is caller-supplied).
+subtle = { version = "2.6", default-features = false }
+rand_core = { version = "0.10", default-features = false }
+
+# --- Test and vector-generation helpers ---
+# Used by tests and by the `gen-vectors` example only (dev-dependencies), never
+# by the published crate: `pbkdf2` computes the Appendix A `P` through the
+# password seam, `rand_chacha` is the seeded deterministic RNG, `proptest` the
+# property tests.
+rand_chacha = "0.10"
 
 # --- This workspace's own crates ---
 # Path dependencies here so later issues depend on them with `.workspace = true`.

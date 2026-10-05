@@ -13,6 +13,25 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-# Pure: no dependencies. The crypto crates (aes-gcm, hkdf, sha2, pbkdf2,
-# zeroize) are declared workspace-wide and are pulled in by the issues that
-# implement D5 (#2-#5).
+# Pure: no I/O, no clocks, no randomness except through a caller-supplied RNG.
+# The crypto crates are declared workspace-wide (D2, D5); `subtle` and
+# `rand_core` come from the same RustCrypto stack so the tree holds one copy.
+aes-gcm.workspace = true
+hkdf.workspace = true
+sha2.workspace = true
+zeroize.workspace = true
+subtle.workspace = true
+rand_core.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+# Vector generation and tests only; not part of the published crate.
+proptest.workspace = true
+rand_chacha.workspace = true
+pbkdf2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[[example]]
+name = "gen-vectors"
+path = "examples/gen-vectors/main.rs"
