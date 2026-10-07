@@ -5,7 +5,8 @@ Draft v1, unstable until 1.0 ([#47](https://github.com/Sealbin/sealbin/issues/47
 Test vectors for the format defined in
 [../handoff-format.md](../handoff-format.md). The vectors are added by
 [#3](https://github.com/Sealbin/sealbin/issues/3), with the crypto and envelope
-cases from [#4](https://github.com/Sealbin/sealbin/issues/4). The worked
+cases from [#4](https://github.com/Sealbin/sealbin/issues/4), and the agent key
+cases from [#39](https://github.com/Sealbin/sealbin/issues/39). The worked
 example in Appendix A of the spec becomes the first vector here.
 
 ## Layout
@@ -13,6 +14,14 @@ example in Appendix A of the spec becomes the first vector here.
 One JSON file per vector, named `<name>.json`, or one file holding an array of
 vector objects. Every binary value is lowercase hex, with no `0x` prefix and no
 separators.
+
+There are three files:
+
+| File | What it holds |
+| :--- | :--- |
+| `v1-basic.json` | the positive vectors: one per seal shape, the first being the Appendix A worked example |
+| `v1-negative.json` | the negative vectors, each with the `expect_error` it MUST fail with |
+| `v1-agent-keys.json` | the agent key bundle vectors of §14: a binding signature, a rotation, and a bundle whose binding no longer verifies |
 
 ## Schema
 
@@ -103,7 +112,10 @@ be one of the names in the spec: `link/missing-key`, `link/bad-key`,
 `envelope/unsupported-version`, `envelope/unknown-flags`,
 `envelope/bad-header`, `envelope/truncated`, `envelope/auth-failed`,
 `payload/bad-metadata`, `payload/unknown-kind`, `payload/size-mismatch`,
-`payload/bad-name`, `bundle/refused`.
+`payload/bad-name`, `bundle/refused`, `agent-keys/name-too-long`,
+`agent-keys/account-id-too-long`, `agent-keys/bad-ed25519-key`,
+`agent-keys/bad-binding`, `agent-keys/bad-rotation`, `agent-keys/bad-wire`,
+`agent-keys/bad-key-id`.
 
 The vectors must cover at least these cases:
 
@@ -122,3 +134,34 @@ The vectors must cover at least these cases:
 The `inputs` are the same shape as a positive vector, except that a vector
 wanting a specific malformed envelope gives it directly as an `envelope` (hex)
 input.
+
+## Agent key vectors
+
+`v1-agent-keys.json` follows the same schema, with the §14 members:
+
+| Member | Type | Meaning |
+| :--- | :--- | :--- |
+| `ed25519_secret`, `x25519_secret` | hex | 32 bytes each; the pair the bundle is built from |
+| `previous_ed25519_secret`, `previous_x25519_secret` | hex | the outgoing pair, in a rotation vector |
+| `new_ed25519_secret`, `new_x25519_secret` | hex | the incoming pair, in a rotation vector |
+| `agent_name`, `account_id` | string | the naming fields of the bundle |
+| `created_at` | integer | seconds since the Unix epoch |
+
+`outputs`:
+
+| Member | Type | Meaning |
+| :--- | :--- | :--- |
+| `ed25519_pub`, `x25519_pub` | hex | 32 bytes each |
+| `binding_message` | hex | the canonical bytes of §14 that the binding signature covers |
+| `binding_signature` | hex | 64 bytes |
+| `rotation_message` | hex | the domain tag and the new bundle's key id |
+| `rotation_signature` | hex | 64 bytes, made by the previous key |
+| `key_id_bytes` | hex | 16 bytes |
+| `key_id` | string | 26 Crockford base32 characters |
+| `fingerprint` | string | the key id in 4-4-4-4-10 groups |
+| `previous_key_id`, `new_key_id` | string | the two ends of a rotation |
+| `new_fingerprint` | string | the incoming bundle's fingerprint |
+| `wire` | hex | the compact encoding of the bundle |
+
+A negative key vector carries `bundle` — the full bundle to check — with
+`inputs.binding_signature`, and `expect_error` of `agent-keys/bad-binding`.

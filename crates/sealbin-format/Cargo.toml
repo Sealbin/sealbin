@@ -22,6 +22,10 @@ sha2.workspace = true
 zeroize.workspace = true
 subtle.workspace = true
 rand_core.workspace = true
+# The agent key bundle: Ed25519 signs, X25519 agrees. Both are on the same
+# digest stack as the crates above (see the workspace manifest).
+ed25519-dalek.workspace = true
+x25519-dalek.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]

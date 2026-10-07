@@ -20,6 +20,8 @@
 //! - [`stream`]: STREAM chunked AES-256-GCM; the streaming encryptor, decryptor
 //!   and header-stripping opener.
 //! - [`envelope`]: whole-buffer `seal`/`open` helpers over the streaming types.
+//! - [`agent_keys`]: the agent key bundle — its Ed25519 and X25519 public keys,
+//!   its key id, and the binding and rotation signatures (§14).
 //! - [`error`]: one [`FormatError`] with a spec error name per variant.
 //!
 //! # Memory
@@ -34,14 +36,17 @@
 //!
 //! # Secrets
 //!
-//! Every secret type — [`LinkKey`], [`PayloadKey`], [`ReadToken`], [`Ikm`] —
-//! zeroises on drop, prints `[redacted]` from `Debug`, and has no `Display` or
-//! `serde::Serialize`, so it cannot reach a log or a request body by accident.
-//! Errors carry no data, so they cannot leak a fragment either.
+//! Every secret type — [`LinkKey`], [`PayloadKey`], [`ReadToken`], [`Ikm`],
+//! [`AgentKeyPair`] — zeroises on drop, prints `[redacted]` from `Debug`, and
+//! has no `Display` or `serde::Serialize`, so it cannot reach a log or a
+//! request body by accident. Errors carry no data, so they cannot leak a
+//! fragment either.
 
 mod b64;
+mod crockford;
 mod secret;
 
+pub mod agent_keys;
 pub mod envelope;
 pub mod error;
 pub mod header;
@@ -49,6 +54,7 @@ pub mod keys;
 pub mod link;
 pub mod stream;
 
+pub use agent_keys::{AgentKeyError, AgentKeyPair, KeyBundle, key_id_to_bytes};
 pub use envelope::{open_bytes, open_with_ikm, seal_bytes, seal_with_ikm};
 pub use error::FormatError;
 pub use header::{Header, PublicInfo};

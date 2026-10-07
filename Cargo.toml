@@ -82,6 +82,27 @@ zeroize = { version = "1.8", features = ["zeroize_derive"] }
 subtle = { version = "2.6", default-features = false }
 rand_core = { version = "0.10", default-features = false }
 
+# --- Agent keys (D7, spec §14) ---
+# The agent key pair is Ed25519 (binding and rotation signatures) plus X25519
+# (the key-agreement half of the bundle), so the workspace depends on the dalek
+# pair. The 3.x line is the one that sits on the SAME digest stack as the rest of
+# this file: ed25519-dalek 3 / x25519-dalek 3 use curve25519-dalek 5, which uses
+# `digest` 0.11 and `sha2` 0.11 — the copies hkdf, pbkdf2 and aes-gcm already
+# pull. The 2.x line would drag in a second `digest` 0.10 alongside `sha2`
+# 0.11, and `cargo tree -d --depth 0` must stay silent (see the note above).
+#
+# Default features are off on both. `std` and `precomputed-tables` (a ~2 KiB
+# lookup table for the static-secrets ladder) are left out: the crate is `alloc`,
+# and the Worker bundle stays smaller. `zeroize` keeps the secret halves
+# wipe-on-drop, which is the whole point of holding them at all.
+ed25519-dalek = { version = "3.0", default-features = false, features = [
+    "alloc",
+    "zeroize",
+    "signature",
+    "rand_core",
+] }
+x25519-dalek = { version = "3.0", default-features = false, features = ["static_secrets", "zeroize"] }
+
 # --- Test and vector-generation helpers ---
 # Used by tests and by the `gen-vectors` example only (dev-dependencies), never
 # by the published crate: `pbkdf2` computes the Appendix A `P` through the

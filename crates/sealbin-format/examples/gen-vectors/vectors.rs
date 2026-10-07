@@ -11,7 +11,7 @@ use rand_chacha::rand_core::SeedableRng as _;
 use serde_json::{Value, json};
 use sha2::Sha256;
 
-use sealbin_format::{Header, Ikm, KeySchedule, LinkKey, seal_with_ikm};
+use sealbin_format::{AgentKeyPair, Header, Ikm, KeyBundle, KeySchedule, LinkKey, seal_with_ikm};
 
 /// Where the committed vectors live, relative to this crate.
 pub const VECTORS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../spec/vectors");
@@ -439,6 +439,106 @@ fn link_vectors() -> Vec<Value> {
             &format!("https://sealb.in/s/k7Qx9pL#key={LINK_KEY_HEX}"),
         ),
     ]
+}
+
+/// The agent name, account and creation time of every key vector.
+const AGENT_NAME: &str = "ledger-bot";
+const ACCOUNT_ID: &str = "acct_01hq8z4m";
+const CREATED_AT: u64 = 1_750_000_000;
+
+/// Every agent key vector: a bundle with its binding signature, and a rotation
+/// from one bundle to the next.
+#[must_use]
+pub fn agent_keys() -> Vec<Value> {
+    let (previous_bundle, previous_pair) = key_bundle(0x00, CREATED_AT);
+    let (new_bundle, _) = key_bundle(0x40, CREATED_AT + 1);
+    let (previous_ed, previous_x) = previous_pair.secret_bytes();
+    let (next_ed, next_x) = key_pair(0x40).secret_bytes();
+
+    vec![
+        json!({
+            "name": "agent-key-binding",
+            "description": "A bundle and the Ed25519 signature that binds its X25519 key, name, account and creation time.",
+            "inputs": {
+                "ed25519_secret": hex(&previous_ed),
+                "x25519_secret": hex(&previous_x),
+                "agent_name": AGENT_NAME,
+                "account_id": ACCOUNT_ID,
+                "created_at": CREATED_AT
+            },
+            "outputs": {
+                "ed25519_pub": hex(&previous_bundle.ed25519_pub),
+                "x25519_pub": hex(&previous_bundle.x25519_pub),
+                "binding_message": hex(&previous_bundle.binding_message()),
+                "binding_signature": hex(&previous_bundle.sign(&previous_pair.signing_key())),
+                "key_id_bytes": hex(&previous_bundle.key_id_bytes()),
+                "key_id": previous_bundle.key_id(),
+                "fingerprint": previous_bundle.fingerprint(),
+                "wire": hex(&previous_bundle.to_wire())
+            }
+        }),
+        json!({
+            "name": "agent-key-rotation",
+            "description": "The outgoing Ed25519 key signs the incoming bundle's key id, and nothing else.",
+            "inputs": {
+                "previous_ed25519_secret": hex(&previous_ed),
+                "previous_x25519_secret": hex(&previous_x),
+                "new_ed25519_secret": hex(&next_ed),
+                "new_x25519_secret": hex(&next_x),
+                "agent_name": AGENT_NAME,
+                "account_id": ACCOUNT_ID,
+                "created_at": CREATED_AT + 1
+            },
+            "outputs": {
+                "previous_key_id": previous_bundle.key_id(),
+                "new_key_id": new_bundle.key_id(),
+                "new_fingerprint": new_bundle.fingerprint(),
+                "rotation_message": hex(&new_bundle.rotation_message()),
+                "rotation_signature": hex(&new_bundle.sign_rotation(&previous_pair.signing_key()))
+            }
+        }),
+        json!({
+            "name": "agent-key-binding-renamed",
+            "description": "The genuine signature of agent-key-binding, checked against a bundle whose agent name is one character longer.",
+            "inputs": {
+                "binding_signature": hex(&previous_bundle.sign(&previous_pair.signing_key()))
+            },
+            "bundle": {
+                "ed25519_pub": hex(&previous_bundle.ed25519_pub),
+                "x25519_pub": hex(&previous_bundle.x25519_pub),
+                "created_at": CREATED_AT,
+                "agent_name": "ledger-bot2",
+                "account_id": ACCOUNT_ID
+            },
+            "expect_error": "agent-keys/bad-binding"
+        }),
+    ]
+}
+
+/// A bundle and its key pair, both built from a byte pattern so a reader can
+/// recompute every value in this file.
+fn key_bundle(seed: u8, created_at: u64) -> (KeyBundle, AgentKeyPair) {
+    let pair = key_pair(seed);
+    let (ed25519_pub, x25519_pub) = pair.public_bundle();
+    let bundle = KeyBundle {
+        ed25519_pub,
+        x25519_pub,
+        created_at,
+        agent_name: AGENT_NAME.to_owned(),
+        account_id: ACCOUNT_ID.to_owned(),
+    };
+    (bundle, pair)
+}
+
+/// A key pair from two 32-byte patterns, `0x00..0x1f` for seed `0x00`.
+fn key_pair(seed: u8) -> AgentKeyPair {
+    let mut ed25519_secret = [0u8; 32];
+    let mut x25519_secret = [0u8; 32];
+    for index in 0..32 {
+        ed25519_secret[index] = seed + u8::try_from(index).expect("index under 32");
+        x25519_secret[index] = seed + 32 + u8::try_from(index).expect("index under 32");
+    }
+    AgentKeyPair::from_secret_bytes(ed25519_secret, x25519_secret)
 }
 
 /// Render a vector array as the committed JSON: pretty, deterministic, with a
