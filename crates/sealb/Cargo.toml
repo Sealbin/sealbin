@@ -14,3 +14,14 @@ workspace = true
 
 [dependencies]
 # No dependencies at the scaffold. `sealb mcp` (#18-#23) brings the MCP stack in.
+
+[build-dependencies]
+# build.rs only: it parses the vendored Factory Zero registry entry
+# (data/stack.json) into a `&'static` table. The shipped binary gains no
+# dependency from this, and no runtime code fetches anything.
+serde_json = { workspace = true }
+
+[dev-dependencies]
+# Only `tests/built_with.rs`: it parses data/stack.json and the registry's
+# reply to compare them. A dev-dependency never reaches the shipped binary.
+serde_json = { workspace = true }

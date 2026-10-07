@@ -2,7 +2,9 @@
 //!
 //! It sends and opens handoffs from a terminal, and `sealb mcp` runs the MCP
 //! server over stdio so agents (Claude Code, Codex, …) can call it directly
-//! (D15; issues #18–#23). At the scaffold (#1) only `--version` is implemented.
+//! (D15; issues #18–#23). `--version` and `about` are implemented so far.
+
+mod built_with;
 
 use std::process::ExitCode;
 
@@ -11,6 +13,7 @@ sealb - seal a handoff and hand it to another agent
 
 Usage:
     sealb --version
+    sealb about       what Sealbin is built with, live and planned
     sealb mcp        an MCP server over stdio (not implemented yet)
 
 Commands arrive issue by issue: https://github.com/sealbin/sealbin/issues";
@@ -20,6 +23,11 @@ fn main() -> ExitCode {
     match args.next().as_deref() {
         Some("--version" | "-V") => {
             println!("sealb {}", env!("CARGO_PKG_VERSION"));
+            println!("Built-with data: {}", built_with::SOURCE);
+            ExitCode::SUCCESS
+        }
+        Some("about") => {
+            print!("{}", built_with::render());
             ExitCode::SUCCESS
         }
         Some(other) => {
