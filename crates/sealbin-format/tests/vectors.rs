@@ -6,7 +6,10 @@ mod vectors;
 
 use std::fs;
 
-use sealbin_format::{Header, Ikm, KeySchedule, Link, LinkKey, ReadToken, open_with_ikm};
+use sealbin_format::{
+    AgentKeyPair, Header, Ikm, KeyBundle, KeySchedule, Link, LinkKey, ReadToken, open_with_ikm,
+};
+use serde_json::Value;
 use sha2::Sha256;
 
 fn link_key(hex: &str) -> LinkKey {
@@ -33,6 +36,134 @@ fn committed_vectors_match_the_generator() {
         committed("v1-negative.json"),
         "v1-negative.json is stale; run `cargo run -p sealbin-format --example gen-vectors`"
     );
+    assert_eq!(
+        vectors::render(&vectors::agent_keys()),
+        committed("v1-agent-keys.json"),
+        "v1-agent-keys.json is stale; run `cargo run -p sealbin-format --example gen-vectors`"
+    );
+}
+
+/// Every agent key vector must reproduce itself: the bundle from its two
+/// secret keys, the key id, the binding signature, and the rotation from the
+/// previous bundle.
+#[test]
+fn agent_key_vectors_verify() {
+    let all = vectors::agent_keys();
+    let binding = &all[0];
+    let inputs = &binding["inputs"];
+    let outputs = &binding["outputs"];
+
+    let pair = key_pair(inputs, "ed25519_secret", "x25519_secret");
+    let created_at = inputs["created_at"].as_u64().unwrap();
+    let bundle = key_bundle(&pair, inputs, created_at);
+    assert_eq!(outputs["ed25519_pub"], vectors::hex(&bundle.ed25519_pub));
+    assert_eq!(outputs["x25519_pub"], vectors::hex(&bundle.x25519_pub));
+    assert_eq!(
+        outputs["binding_message"],
+        vectors::hex(&bundle.binding_message())
+    );
+
+    let signature: [u8; 64] = vectors::unhex(outputs["binding_signature"].as_str().unwrap())
+        .try_into()
+        .unwrap();
+    let signed = bundle.sign(&pair.signing_key());
+    assert_eq!(vectors::hex(&signed), outputs["binding_signature"]);
+    assert_eq!(bundle.verify_binding(&signature), Ok(()));
+
+    assert_eq!(bundle.key_id(), outputs["key_id"]);
+    assert_eq!(bundle.fingerprint(), outputs["fingerprint"]);
+    assert_eq!(
+        outputs["key_id_bytes"],
+        vectors::hex(&bundle.key_id_bytes())
+    );
+    assert_eq!(
+        sealbin_format::agent_keys::key_id_to_bytes(outputs["key_id"].as_str().unwrap()),
+        Ok(bundle.key_id_bytes())
+    );
+    assert_eq!(
+        KeyBundle::from_wire(&vectors::unhex(outputs["wire"].as_str().unwrap())).unwrap(),
+        bundle
+    );
+
+    let rotation = &all[1];
+    let previous_inputs = &rotation["inputs"];
+    let previous_pair = key_pair(
+        previous_inputs,
+        "previous_ed25519_secret",
+        "previous_x25519_secret",
+    );
+    let previous = key_bundle(
+        &previous_pair,
+        previous_inputs,
+        binding["inputs"]["created_at"].as_u64().unwrap(),
+    );
+    assert_eq!(
+        previous.key_id(),
+        bundle.key_id(),
+        "the same key id as above"
+    );
+    let new_pair = key_pair(previous_inputs, "new_ed25519_secret", "new_x25519_secret");
+    let new = key_bundle(
+        &new_pair,
+        previous_inputs,
+        previous_inputs["created_at"].as_u64().unwrap(),
+    );
+    let outputs = &rotation["outputs"];
+    assert_eq!(previous.key_id(), outputs["previous_key_id"]);
+    assert_eq!(new.key_id(), outputs["new_key_id"]);
+    assert_eq!(new.fingerprint(), outputs["new_fingerprint"]);
+    assert_eq!(
+        outputs["rotation_message"],
+        vectors::hex(&new.rotation_message())
+    );
+    let signature: [u8; 64] = vectors::unhex(outputs["rotation_signature"].as_str().unwrap())
+        .try_into()
+        .unwrap();
+    assert_eq!(
+        vectors::hex(&new.sign_rotation(&previous_pair.signing_key())),
+        outputs["rotation_signature"]
+    );
+    assert_eq!(new.verify_rotation(&previous, &signature), Ok(()));
+}
+
+/// The negative agent key vector: a genuine signature checked against a bundle
+/// whose agent name is one character longer.
+#[test]
+fn agent_key_negative_vector_fails_with_its_code() {
+    let vector = &vectors::agent_keys()[2];
+    assert_eq!(vector["name"], "agent-key-binding-renamed");
+    let bundle = &vector["bundle"];
+    let tampered = KeyBundle {
+        ed25519_pub: bytes32(bundle["ed25519_pub"].as_str().unwrap()),
+        x25519_pub: bytes32(bundle["x25519_pub"].as_str().unwrap()),
+        created_at: bundle["created_at"].as_u64().unwrap(),
+        agent_name: bundle["agent_name"].as_str().unwrap().to_owned(),
+        account_id: bundle["account_id"].as_str().unwrap().to_owned(),
+    };
+    let signature: [u8; 64] =
+        vectors::unhex(vector["inputs"]["binding_signature"].as_str().unwrap())
+            .try_into()
+            .unwrap();
+    let error = tampered.verify_binding(&signature).unwrap_err();
+    assert_eq!(error.code(), vector["expect_error"]);
+}
+
+/// The key pair the two named `inputs` of a vector describe.
+fn key_pair(inputs: &Value, ed25519: &str, x25519: &str) -> AgentKeyPair {
+    let secret = |name: &str| bytes32(inputs[name].as_str().unwrap());
+    AgentKeyPair::from_secret_bytes(secret(ed25519), secret(x25519))
+}
+
+/// The bundle a key pair and the naming fields of a vector describe.
+fn key_bundle(pair: &AgentKeyPair, inputs: &Value, created_at: u64) -> KeyBundle {
+    let (ed25519_pub, x25519_pub) = pair.public_bundle();
+    KeyBundle {
+        ed25519_pub,
+        x25519_pub,
+        created_at,
+        agent_name: inputs["agent_name"].as_str().unwrap().to_owned(),
+        account_id: inputs["account_id"].as_str().unwrap().to_owned(),
+    }
 }
 
 /// Every positive vector must be internally consistent: its key schedule must

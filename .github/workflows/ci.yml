@@ -123,6 +123,10 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: "24"
+      # Here because this is the one job that already has Node: the check is a
+      # few hundred milliseconds of WebCrypto, and it needs no build.
+      - name: Check the agent key vectors with WebCrypto
+        run: node spec/vectors/check-agent-keys.mjs
       - name: Install wrangler
         run: npm i -g wrangler@4
       - name: Build the Worker bundle

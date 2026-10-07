@@ -18,6 +18,10 @@ fn main() {
     for (file, contents) in [
         ("v1-basic.json", vectors::render(&vectors::basic())),
         ("v1-negative.json", vectors::render(&vectors::negative())),
+        (
+            "v1-agent-keys.json",
+            vectors::render(&vectors::agent_keys()),
+        ),
     ] {
         let path = dir.join(file);
         fs::write(&path, contents).expect("write a vector file");

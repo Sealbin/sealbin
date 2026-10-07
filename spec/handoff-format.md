@@ -633,9 +633,138 @@ counter in four bytes, not the NIST random-IV AEAD bound, which does not apply
 to counter nonces. Nonce reuse is impossible because `K_payload` is unique per
 seal (§6).
 
-**CSPRNG.** `K_link`, `nonce`, `salt`, `id` and `reopen_token` MUST come from a
-CSPRNG. Verifier comparison MUST be constant time (§4). The server never
-receives the fragment, and the HKDF salt is 128 random bits.
+**CSPRNG.** `K_link`, `nonce`, `salt`, `id`, `reopen_token` and an agent's
+Ed25519 and X25519 keys MUST come from a CSPRNG. Verifier comparison MUST be
+constant time (§4). The server never receives the fragment, and the HKDF salt
+is 128 random bits.
+
+## 14. Agent keys
+
+An agent is a long-lived identity, not a seal. It publishes a key bundle — one
+Ed25519 key that signs and one X25519 key that agrees — together with the name
+and account it belongs to and the time it was created:
+
+```text
+bundle = ed25519_pub              (32 bytes)
+      || x25519_pub               (32 bytes)
+      || created_at               (u64, seconds since the Unix epoch)
+      || u32be(len(agent_name)) || agent_name      (1..=64 bytes, UTF-8)
+      || u32be(len(account_id)) || account_id      (1..=64 bytes, UTF-8)
+```
+
+A client MUST generate both secret keys from a CSPRNG and MUST NOT reuse one
+key pair across agents. The bundle is public; the secret keys never leave the
+agent, and a client MUST NOT log them.
+
+The compact encoding a client puts on the wire is the same fields in the same
+order — 72 fixed bytes followed by the two length-prefixed strings. It is a
+transport shape, not the signed message.
+
+**Binding.** The bundle's Ed25519 key signs the canonical bytes below, so a
+reader can check that the agent owns the agreement key and the name beside it
+without any server vouching:
+
+```text
+M_binding = "sealbin/v1/agent-key-binding"          (28 bytes, ASCII)
+          || u32be(len(agent_name)) || agent_name
+          || u32be(len(account_id)) || account_id
+          || u64be(created_at)
+          || x25519_pub                             (32 bytes)
+
+binding_signature = Ed25519(ed25519_secret, M_binding)     (64 bytes)
+```
+
+The Ed25519 public key is deliberately *not* in the message it verifies: it is
+the key the signature is checked against, so it is authenticated by being the
+verifier. The X25519 key is a different key and MUST be covered, without which
+an attacker could replace the agreement half of a bundle. The key id below is
+derived from both public keys and is not in the message either.
+
+**Key id.** A bundle's id names it in a directory, a log line and a support
+request:
+
+```text
+key_id_bytes = SHA-256(ed25519_pub || x25519_pub)[0..16]    (16 bytes)
+key_id       = Crockford-base32(key_id_bytes)                (26 characters)
+```
+
+The alphabet is `0123456789abcdefghjkmnpqrstvwxyz`, lower case, without
+padding, most significant bit first. `i`, `l`, `o` and `u` are absent, so a
+hand-copied id cannot turn one character into another; a decoder MAY accept
+them as `1`, `1`, `0` and `v` respectively, and MAY accept upper case. The last
+character carries the final three bits, left aligned in its five-bit group, so
+its low two bits are zero.
+
+A client MAY show the id grouped for a human to read or dictate. The grouping
+is presentation only and carries no information:
+
+```text
+fingerprint = key_id[0..4] || "-" || key_id[4..8] || "-" || key_id[8..12]
+            || "-" || key_id[12..16] || "-" || key_id[16..26]
+```
+
+The groups are 4, 4, 4, 4 and 10 characters: 16 bytes are 128 bits, which is 26
+characters, and four groups of four leave exactly ten. Stripping the hyphens
+gives the key id back, and two bundles have the same fingerprint if and only if
+they have the same key id.
+
+**Rotation.** An agent that replaces its keys publishes the new bundle together
+with a signature by the key it is replacing, over the new bundle's key id:
+
+```text
+M_rotation   = "sealbin/v1/agent-key-rotation" || key_id_bytes(new bundle)
+
+rotation_signature = Ed25519(ed25519_secret(previous), M_rotation)  (64 bytes)
+```
+
+The message carries the key id and nothing else — no names, no times, no public
+keys — so the rotation vouches for that one bundle and reveals nothing about
+the agent. A directory MUST verify the rotation against the bundle the agent
+already has on file before it accepts the new one, and MUST reject a bundle
+whose `account_id` differs from the one already on file. A client MUST NOT
+accept a new bundle for an agent without a rotation signature from the current
+key, and MUST NOT accept a first bundle for an existing agent name. The first
+bundle of a new agent is registered against the account the caller is
+authenticated as; whoever can write to that account's agent list can therefore
+add a name, which is why adding an agent is an authenticated act and not a
+public registration.
+
+A client MUST treat the following as failure of a binding check
+(`agent-keys/bad-binding`) or of a rotation check (`agent-keys/bad-rotation`):
+a signature from another key, a signature over different bytes, and a
+non-canonical Ed25519 public key. Verification SHOULD be strict — a small-order
+or non-canonical key MUST NOT verify.
+
+These primitives are the ones WebCrypto has and a browser can call with no
+plugin, except the two signatures:
+
+| Step | WebCrypto call |
+| :--- | :--- |
+| random bytes | `crypto.getRandomValues(new Uint8Array(n))` |
+| SHA-256 | `crypto.subtle.digest("SHA-256", …)` |
+| Ed25519 sign | `crypto.subtle.sign({name:"Ed25519"}, key, message)` after `crypto.subtle.importKey("pkcs8", …, "Ed25519", false, ["sign"])` |
+| Ed25519 verify | `crypto.subtle.verify({name:"Ed25519"}, key, signature, message)` after `crypto.subtle.importKey("spki", …, "Ed25519", false, ["verify"])` |
+| X25519 agreement | `crypto.subtle.deriveBits({name:"X25519", public: peer}, key, 256)` after importing the raw private as `"X25519"` |
+
+A client that performs the agreement MUST reject an all-zero shared secret: that
+is what a small-order peer key produces, and using it would derive a secret
+every such peer knows.
+
+*Why two keys and not one.* Signing needs Ed25519 and agreement needs X25519;
+neither RFC 8032 nor RFC 7748 covers the other's job, and the Ed25519 key pair
+must not be used for a Diffie-Hellman. *Why the X25519 key is signed but the
+Ed25519 key is not.* A signature is checked under the Ed25519 key, so putting
+it in its own message adds nothing; the X25519 key is a separate key that the
+message binds to the same identity, which is what stops a swapped agreement
+half. *Why the key id is a hash of both keys.* It names the bundle, not the
+agent, so a rotation changes it and a directory can tell the two apart; 128
+bits is far past any collision an attacker could search, and the shortened
+form is what a human can read aloud. *Why Crockford.* The alphabet drops the
+characters people confuse, which is exactly the failure a spoken or retyped key
+id would otherwise have.
+
+The reference implementation is `sealbin_format::agent_keys`, and the vectors
+are in [`vectors/v1-agent-keys.json`](vectors/v1-agent-keys.json).
 
 ## Appendix A — Worked example
 
