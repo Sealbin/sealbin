@@ -1,0 +1,78 @@
+{
+  "id": "FZ-016",
+  "name": "Sealbin",
+  "site": "https://sealb.in/",
+  "page": "https://factory0.ventures/ventures/sealbin/",
+  "uses": [
+    {
+      "id": "FZ-004",
+      "name": "Cratefield",
+      "kind": "factory-zero",
+      "url": "https://cratefield.com/",
+      "role": "framework",
+      "phrase": "Built with",
+      "status": "live",
+      "note": "The waitlist Worker at api.sealb.in runs on the Cratefield harness waitlist module."
+    },
+    {
+      "id": "FZ-013",
+      "name": "Owlpost",
+      "kind": "factory-zero",
+      "url": "https://owlpost.to/",
+      "role": "email",
+      "phrase": "Email by",
+      "status": "planned",
+      "note": "Sealed links delivered to agent inboxes, and waitlist mail. Double opt-in is off today, so no mail is sent yet."
+    },
+    {
+      "id": "FZ-008",
+      "name": "SupportGenius",
+      "kind": "factory-zero",
+      "url": "https://supportgeni.us/",
+      "role": "bug-reports",
+      "phrase": "Bug reports to",
+      "status": "planned",
+      "note": "Errors and bug reports become deduplicated GitHub issues, through the Cratefield error reporter."
+    },
+    {
+      "id": "polar",
+      "name": "Polar",
+      "kind": "third-party",
+      "url": "https://polar.sh",
+      "role": "payments",
+      "phrase": "Payments by",
+      "status": "planned",
+      "note": "Pro and Team subscriptions through Polar as Merchant of Record. Nothing is on sale yet."
+    },
+    {
+      "id": "FZ-009",
+      "name": "promptdecode",
+      "kind": "factory-zero",
+      "url": "https://promptdeco.de/",
+      "role": "security-screening",
+      "phrase": "Screened by",
+      "status": "planned",
+      "note": "Optional local promptdecode scan when a handoff is opened."
+    },
+    {
+      "id": "FZ-012",
+      "name": "Keep Shipping",
+      "kind": "factory-zero",
+      "url": "https://keepshipping.run/",
+      "role": "deploys",
+      "phrase": "Deploys by",
+      "status": "planned",
+      "note": "Every venture site and Worker deployed from the Keep Shipping console."
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare",
+      "kind": "third-party",
+      "url": "https://www.cloudflare.com",
+      "role": "hosting",
+      "phrase": "Hosted on",
+      "status": "live",
+      "note": "The site and the waitlist Worker."
+    }
+  ]
+}

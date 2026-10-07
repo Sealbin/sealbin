@@ -1,6 +1,13 @@
 <!doctype html>
 <!-- Placeholder: issue #17 ships the real open page (decrypts in the browser
-     with @sealbin/crypto, D3). Until then this proves the /s/* route works. -->
+     with @sealbin/crypto, D3). Until then this proves the /s/* route works.
+
+     The "Built with" footer below is generated-adjacent data: its source of
+     truth is crates/sealb/data/stack.json, a vendored copy of Sealbin's entry
+     (FZ-016) in the Factory Zero registry at https://factory0.ventures/stack.json,
+     which changes first. This page is hand-written HTML (D1: the pages stay
+     vanilla HTML and web/build.sh only copies), so the two must be kept in step
+     by hand; crates/sealb/tests/built_with.rs fails if they drift apart. -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -12,6 +19,81 @@
     <main>
       <h1>sealbin</h1>
       <p>Coming soon.</p>
+
+      <!-- Generated from crates/sealb/data/stack.json (Factory Zero registry
+           entry FZ-016). Keep in step with that file; `sealb about` prints the
+           same list from the same data. -->
+      <section>
+        <h2>Built with</h2>
+        <dl>
+          <dt>Built with</dt>
+          <dd>
+            Cratefield — <strong>live</strong>.
+            <a href="https://cratefield.com/">https://cratefield.com/</a>.
+            The waitlist Worker at api.sealb.in runs on the Cratefield harness
+            waitlist module.
+          </dd>
+
+          <dt>Email by</dt>
+          <dd>
+            Owlpost — <strong>planned</strong>.
+            <a href="https://owlpost.to/">https://owlpost.to/</a>.
+            Sealed links delivered to agent inboxes, and waitlist mail. Double
+            opt-in is off today, so no mail is sent yet.
+          </dd>
+
+          <dt>Bug reports to</dt>
+          <dd>
+            SupportGenius — <strong>planned</strong>.
+            <a href="https://supportgeni.us/">https://supportgeni.us/</a>.
+            Errors and bug reports become deduplicated GitHub issues, through the
+            Cratefield error reporter.
+          </dd>
+
+          <dt>Payments by</dt>
+          <dd>
+            Polar — <strong>planned</strong>.
+            <a href="https://polar.sh">https://polar.sh</a>.
+            Pro and Team subscriptions through Polar as Merchant of Record.
+            Nothing is on sale yet.
+          </dd>
+
+          <dt>Screened by</dt>
+          <dd>
+            promptdecode — <strong>planned</strong>.
+            <a href="https://promptdeco.de/">https://promptdeco.de/</a>.
+            Optional local promptdecode scan when a handoff is opened.
+          </dd>
+
+          <dt>Deploys by</dt>
+          <dd>
+            Keep Shipping — <strong>planned</strong>.
+            <a href="https://keepshipping.run/">https://keepshipping.run/</a>.
+            Every venture site and Worker deployed from the Keep Shipping console.
+          </dd>
+
+          <dt>Hosted on</dt>
+          <dd>
+            Cloudflare — <strong>live</strong>.
+            <a href="https://www.cloudflare.com">https://www.cloudflare.com</a>.
+            The site and the waitlist Worker.
+          </dd>
+        </dl>
+
+        <p>
+          <strong>live</strong> means in use today. <strong>planned</strong>
+          means decided and tracked, not in use yet.
+        </p>
+        <p>
+          Subprocessors:
+          <a href="https://factory0.ventures/ventures/sealbin/"
+            >https://factory0.ventures/ventures/sealbin/</a
+          >. Source:
+          <a href="https://factory0.ventures/stack.json"
+            >https://factory0.ventures/stack.json</a
+          >.
+        </p>
+      </section>
     </main>
   </body>
 </html>

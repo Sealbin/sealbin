@@ -1483,6 +1483,9 @@ dependencies = [
 [[package]]
 name = "sealb"
 version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
 
 [[package]]
 name = "sealbin-core"

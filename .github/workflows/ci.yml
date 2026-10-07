@@ -70,6 +70,15 @@ jobs:
           toolchain: "1.98.1"
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace
+      # The vendored Factory Zero registry entry behind `sealb about` and the
+      # open page (crates/sealb/data/stack.json) must equal what the registry
+      # publishes. It needs the network, so it is the one test `cargo test`
+      # skips; run it here, next to the tests it guards. The registry changes
+      # first, so re-vendor from it when this fails.
+      - name: Vendored registry entry has not drifted
+        run: >-
+          cargo test -p sealb --test built_with -- --ignored --exact
+          vendored_entry_matches_published_registry
 
   wasm:
     name: wasm check
