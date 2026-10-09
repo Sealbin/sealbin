@@ -22,7 +22,7 @@ serde = { workspace = true }
 # Bound `?` values for the accounts/agents store (D11, D12): placeholders,
 # never interpolated values. Only the value type is used, so no backend
 # feature — the harness renders every statement.
-sea-query = { version = "0.32.7", default-features = false, features = [
+sea-query = { version = "1.0.2", default-features = false, features = [
     "thread-safe",
 ] }
 # OS entropy for minting agent keys; `crypto.getRandomValues` on wasm.
