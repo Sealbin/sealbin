@@ -248,7 +248,7 @@ dependencies = [
  "async-trait",
  "cratefield-core",
  "rusqlite",
- "sea-query 0.32.7",
+ "sea-query",
  "time",
  "tracing",
 ]
@@ -289,7 +289,7 @@ dependencies = [
  "hmac",
  "http",
  "schemars",
- "sea-query 0.32.7",
+ "sea-query",
  "serde",
  "serde_json",
  "sha1",
@@ -323,7 +323,7 @@ dependencies = [
  "getrandom 0.4.3",
  "hmac",
  "http",
- "sea-query 0.32.7",
+ "sea-query",
  "serde",
  "serde_json",
  "sha2",
@@ -352,7 +352,7 @@ dependencies = [
  "hmac",
  "http",
  "pollster 0.4.0",
- "sea-query 0.32.7",
+ "sea-query",
  "serde",
  "serde_json",
  "sha2",
@@ -1487,12 +1487,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sea-query"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "546040c653a705e60ec65ecd3191a809603734bebbc225775916dea9ae409b31"
-
-[[package]]
 name = "sealb"
 version = "0.1.0"
 dependencies = [
@@ -1537,7 +1531,7 @@ dependencies = [
  "cratefield-testing",
  "getrandom 0.4.3",
  "pollster 1.0.1",
- "sea-query 1.0.2",
+ "sea-query",
  "serde",
  "serde_json",
  "time",

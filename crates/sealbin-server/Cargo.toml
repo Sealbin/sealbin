@@ -21,8 +21,10 @@ serde_json = { workspace = true }
 serde = { workspace = true }
 # Bound `?` values for the accounts/agents store (D11, D12): placeholders,
 # never interpolated values. Only the value type is used, so no backend
-# feature — the harness renders every statement.
-sea-query = { version = "1.0.2", default-features = false, features = [
+# feature — the harness renders every statement. The major version must be
+# the one cratefield-core's `Statement::with_values` takes (0.32 for core
+# 0.8): a newer sea-query is a second `Value` type that does not type-check.
+sea-query = { version = "0.32.7", default-features = false, features = [
     "thread-safe",
 ] }
 # OS entropy for minting agent keys; `crypto.getRandomValues` on wasm.
