@@ -1,4 +1,4 @@
-//! The sealbin server domain, with no harness types.
+//! The sealbin server domain, with no harness types. Includes billing functionality.
 //!
 //! The seal state machine (`sealed -> opening -> gone`, D8), the plans as data
 //! (D13) and the id and limit rules live here. It deliberately depends on
@@ -30,6 +30,12 @@
 
 pub mod ids;
 pub mod seal;
+
+pub mod billing;
+
+pub use billing::{
+    SubscriptionCheckoutRequest, WebhookEvent, create_subscription_checkout, verify_webhook,
+};
 
 pub use ids::{ID_LEN, IdError, SealId};
 pub use seal::{
