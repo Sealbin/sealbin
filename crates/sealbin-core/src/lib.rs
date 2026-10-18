@@ -29,9 +29,14 @@
 //! ```
 
 pub mod ids;
+pub mod plans;
 pub mod seal;
 
 pub use ids::{ID_LEN, IdError, SealId};
+pub use plans::{
+    LAUNCH_PROMO_SEALS_PER_MONTH, Plan, PlanFeatures, PlanLimits, STANDARD_FREE_SEALS_PER_MONTH,
+    on_plan_change,
+};
 pub use seal::{
     AckOutcome, AuditEvent, DEFAULT_TTL_MS, Effect, GoneReason, INITIAL_BACKOFF_MS, MAX_BACKOFF_MS,
     Metadata, MetadataState, NewSeal, OpenOutcome, REOPEN_WINDOW_MS, ReopenOutcome, SealRecord,

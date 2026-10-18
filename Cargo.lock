@@ -1530,14 +1530,17 @@ dependencies = [
 name = "sealbin-server"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "cratefield-core",
  "cratefield-testing",
  "getrandom",
  "pollster 1.0.1",
  "sea-query",
+ "sealbin-core",
  "serde",
  "serde_json",
  "time",
+ "tower",
 ]
 
 [[package]]

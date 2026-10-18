@@ -703,7 +703,7 @@ impl Directory {
     }
 
     /// The account row `id`, when it exists.
-    async fn find_account(&self, id: &str) -> Result<Option<Account>, Problem> {
+    pub(crate) async fn find_account(&self, id: &str) -> Result<Option<Account>, Problem> {
         self.query(
             &format!("SELECT {ACCOUNT_COLUMNS} FROM accounts WHERE id = ?"),
             vec![id.into()],

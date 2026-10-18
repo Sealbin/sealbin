@@ -6,10 +6,12 @@
 
 pub mod accounts;
 pub mod agents;
+pub mod billing;
 pub mod directory;
 pub mod seals;
 
 pub use accounts::Accounts;
 pub use agents::Agents;
+pub use billing::Billing;
 pub use directory::{AllowAll, Directory, NoSealRevoker, PlanGate, SealRevoker};
 pub use seals::Seals;
