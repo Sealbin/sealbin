@@ -32,11 +32,11 @@ homepage = "https://sealb.in"
 # and add `allow-git = ["https://github.com/Cratefield/harness"]` to the
 # [sources] section of deny.toml in the same change. Never `factory0-*`: those
 # were renamed to `cratefield-*` (0.6.0, published 2026-09-28).
-cratefield-core = "0.8.1"
-cratefield-runtime-cloudflare = "0.4.1"
-cratefield-testing = "0.5.1"
-cratefield-auth-client = "0.2.1"
-cratefield-adapter-stripe = "0.2.1"
+cratefield-core = "0.10.0"
+cratefield-runtime-cloudflare = "0.5.0"
+cratefield-testing = "0.5.3"
+cratefield-auth-client = "0.3.4"
+cratefield-adapter-stripe = "0.3.4"
 
 # --- Cloudflare Workers runtime ---
 # `=0.8.5` because that is the version cratefield-runtime-cloudflare 0.3.0
