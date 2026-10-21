@@ -38,9 +38,6 @@ time = { version = "0.3.45", default-features = false, features = [
     "std",
     "formatting",
 ] }
-# SHA-256 for hashing client IPs in anonymous seal rate limiting (D14).
-# Already in the graph via `cratefield-core`'s crypto stack.
-sha2 = { workspace = true }
 
 [dev-dependencies]
 # The conformance kit: fake ports and the no-network request helpers.
