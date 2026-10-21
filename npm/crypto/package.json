@@ -1,7 +1,7 @@
 {
   "name": "@sealbin/crypto",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "The wasm build of sealbin-format, for browsers.",
   "license": "Apache-2.0",
   "homepage": "https://sealb.in",

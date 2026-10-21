@@ -1,16 +1,18 @@
-//! The `seals` module (D10): the `/.well-known/sealbin` discovery document.
-//!
-//! The seal routes land in later issues; this module ships the document every
-//! client resolves the API from (D3) and the `SEALBIN_API_URL` contract.
+//! The `seals` module (D9–D14): seal lifecycle (creation, opening, reading),
+//! sealed text routes, and the `.well-known/sealbin` discovery document.
 
 use std::sync::{Arc, RwLock};
 
 use cratefield_core::axum::extract::State;
+use cratefield_core::axum::http::StatusCode;
 use cratefield_core::axum::http::{HeaderValue, Uri, header};
 use cratefield_core::axum::response::{IntoResponse, Response};
 use cratefield_core::axum::routing::get;
 use cratefield_core::axum::{Json, Router};
-use cratefield_core::{Config, ConfigError, Migrations, Module, ModuleContext, Port, Problem};
+use cratefield_core::{
+    Config, ConfigError, Migrations, Module, ModuleContext, Port, Problem, ProblemDef,
+    SqlMigration, assert_migration_set,
+};
 
 /// The deployment's public API base URL (D3). Read raw, not `SEALS_*`: it is
 /// deployment-wide.
@@ -27,6 +29,86 @@ const MAX_PART_BYTES: u64 = 52_428_800; // 50 MiB
 
 /// How long a client may cache `/.well-known/sealbin` (D3).
 const CACHE_MAX_AGE_SECS: u32 = 3_600;
+
+/// Migrations for the seals module (D9, D14).
+const MIGRATIONS: [SqlMigration; 3] = [
+    SqlMigration::new(
+        "0001",
+        "seals_index",
+        include_str!("../../migrations/sqlite/0003_seals_index.sql"),
+    ),
+    SqlMigration::new(
+        "0002",
+        "seals_idempotency",
+        include_str!("../../migrations/sqlite/0004_seals_idempotency.sql"),
+    ),
+    SqlMigration::new(
+        "0003",
+        "anon_seal_limits",
+        include_str!("../../migrations/sqlite/0005_anon_seal_limits.sql"),
+    ),
+];
+
+const _: () = assert_migration_set(&MIGRATIONS);
+
+/// The seals routes (D9–D14).
+mod routes;
+
+/// 413: the seal body exceeds 1 MiB (D9).
+pub const SEAL_TOO_LARGE: ProblemDef = ProblemDef {
+    slug: "seal/too-large",
+    status: StatusCode::PAYLOAD_TOO_LARGE,
+    title: "Seal body too large",
+    description: "Seal body must be at most 1 MiB.",
+};
+
+/// 400: seal envelope magic/version is invalid (D9).
+pub const SEAL_BAD_ENVELOPE: ProblemDef = ProblemDef {
+    slug: "seal/bad-envelope",
+    status: StatusCode::BAD_REQUEST,
+    title: "Invalid seal envelope",
+    description: "Seal envelope has invalid magic or version.",
+};
+
+/// 404: seal not found or already gone (D10).
+pub const SEAL_NOT_FOUND: ProblemDef = ProblemDef {
+    slug: "seal/not-found",
+    status: StatusCode::NOT_FOUND,
+    title: "Seal not found",
+    description: "The seal does not exist or has been deleted.",
+};
+
+/// 410: seal is gone (D10).
+pub const SEAL_GONE: ProblemDef = ProblemDef {
+    slug: "seal/gone",
+    status: StatusCode::GONE,
+    title: "Seal is gone",
+    description: "The seal has been deleted or expired.",
+};
+
+/// 403: wrong `read_token` or `reopen_token` (D9, D10).
+pub const SEAL_WRONG_KEY: ProblemDef = ProblemDef {
+    slug: "seal/wrong-key",
+    status: StatusCode::FORBIDDEN,
+    title: "Wrong key",
+    description: "The provided token does not match.",
+};
+
+/// 429: anonymous seal limit exceeded (D14).
+pub const SEAL_ANONYMOUS_LIMIT_EXCEEDED: ProblemDef = ProblemDef {
+    slug: "seal/anonymous-limit-exceeded",
+    status: StatusCode::TOO_MANY_REQUESTS,
+    title: "Anonymous seal limit exceeded",
+    description: "You've reached the daily limit for anonymous seals. Sign in to Sealbin for more.",
+};
+
+/// 429: throttled after wrong key (D9).
+pub const SEAL_THROTTLED: ProblemDef = ProblemDef {
+    slug: "seal/throttled",
+    status: StatusCode::TOO_MANY_REQUESTS,
+    title: "Too many wrong attempts",
+    description: "Too many incorrect read tokens. Please wait before trying again.",
+};
 
 /// The `seals` module. Compose it with [`Seals::new`].
 #[derive(Default)]
@@ -65,7 +147,7 @@ impl Module for Seals {
     }
 
     fn migrations(&self) -> Migrations {
-        Migrations::EMPTY
+        Migrations::sqlite(&MIGRATIONS)
     }
 
     fn validate_config(&self, cfg: &dyn Config) -> Result<(), ConfigError> {
@@ -94,7 +176,7 @@ impl Module for Seals {
         if let Ok(mut slot) = self.api_url.write() {
             *slot = resolved;
         }
-        Router::new() // the seal routes land in later issues
+        routes::router(ctx)
     }
 
     fn well_known(&self) -> Option<Router> {

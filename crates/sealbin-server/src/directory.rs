@@ -702,6 +702,66 @@ impl Directory {
         Ok(())
     }
 
+    /// Checks if an anonymous seal from `client_ip` (hashed with salt) can be
+    /// created within the 24-hour rolling limit (3 seals per 24h). If the sender
+    /// is authenticated via Bearer token, `sender_id` attributes them.
+    ///
+    /// # Returns
+    ///
+    /// `Ok(true)` if the seal can be created. `Ok(false)` with 429 when the
+    /// limit is exceeded. Errors on database failures.
+    #[allow(dead_code)]
+    pub(crate) async fn check_anonymous_seal_limit(
+        &self,
+        client_ip: &str,
+        sender_id: Option<&str>,
+        now_ms: i64,
+    ) -> Result<bool, Problem> {
+        let ip_hash = hash_client_ip(client_ip);
+        // Clean up expired entries (older than 24h)
+        self.execute(
+            "DELETE FROM anon_seal_limits WHERE expires_at <= ?",
+            vec![(now_ms).into()],
+        )
+        .await?;
+
+        // Count seals created in the last 24h for this (ip_hash, sender_id)
+        let count_result = self
+            .query(
+                "SELECT COUNT(*) as cnt FROM anon_seal_limits \
+                 WHERE ip_hash = ? AND sender_id IS ? AND expires_at > ?",
+                vec![ip_hash.as_str().into(), sender_id.into(), (now_ms).into()],
+            )
+            .await?;
+
+        let count: i64 = count_result
+            .first()
+            .and_then(|row| optional(row, "cnt"))
+            .and_then(|s| s.parse::<i64>().ok())
+            .unwrap_or(0);
+
+        if count >= 3 {
+            return Ok(false);
+        }
+
+        // Increment the counter (or create a new entry)
+        let expires_at = now_ms + (24 * 60 * 60 * 1000); // 24h from now
+        self.execute(
+            "INSERT INTO anon_seal_limits (ip_hash, sender_id, created_at, expires_at) \
+             VALUES (?, ?, ?, ?) \
+             ON CONFLICT(ip_hash, sender_id) DO UPDATE SET expires_at = excluded.expires_at",
+            vec![
+                ip_hash.into(),
+                sender_id.into(),
+                (now_ms).into(),
+                expires_at.into(),
+            ],
+        )
+        .await?;
+
+        Ok(true)
+    }
+
     /// The account row `id`, when it exists.
     async fn find_account(&self, id: &str) -> Result<Option<Account>, Problem> {
         self.query(
@@ -738,6 +798,26 @@ impl Directory {
     async fn execute(&self, sql: &str, values: Vec<SeaValue>) -> Result<u64, DbError> {
         self.db.execute(&Statement::with_values(sql, values)).await
     }
+}
+
+/// Hash a client IP with a fixed salt to avoid storing raw IPs (D14).
+/// Uses SHA-256 and returns hex-encoded result.
+#[allow(dead_code)]
+fn hash_client_ip(ip: &str) -> String {
+    use sha2::{Digest, Sha256};
+    use std::fmt::Write;
+    // Fixed salt: never changes, so the same IP always hashes to the same value
+    const SALT: &[u8] = b"sealbin-anon-seal-salt";
+    let mut hasher = Sha256::new();
+    hasher.update(SALT);
+    hasher.update(ip.as_bytes());
+    let digest = hasher.finalize();
+    // Convert digest bytes to hex string
+    let mut hex = String::with_capacity(64);
+    for byte in &digest[..] {
+        let _ = write!(hex, "{byte:02x}");
+    }
+    hex
 }
 
 /// 404 for an account that is not there — one answer for every route.
