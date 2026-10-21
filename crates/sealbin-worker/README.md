@@ -94,3 +94,8 @@ main. **needs-human:** set the `CLOUDFLARE_API_TOKEN` repository secret (Workers
 Scripts:Edit, D1:Edit, Workers R2 Storage:Edit); `CLOUDFLARE_ACCOUNT_ID` too if
 the token can see more than one account. Without the token the workflow skips
 itself with a notice.
+
+
+## Rate-limit namespace ids (account-wide)
+
+Cloudflare Workers rate-limit `namespace_id`s are account-wide, not per Worker: any two Workers (or environments) on the same Cloudflare account that use the same id share counters. Sealbin owns the block **3500-3509**; its ids are top-level 3500, staging 3501, production 3502. Pick new ids from an unused number inside this block and check the other ventures' wrangler configs before adding one.

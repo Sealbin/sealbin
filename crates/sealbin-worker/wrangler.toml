@@ -32,12 +32,12 @@ bucket_name = "sealbin-seals-staging"
 name = "SEAL_OBJECTS"
 class_name = "SealObject"
 
-# Rate-limit namespace ids are account-wide and manual. Needs-human: confirm
-# 1017 is unused on the Factory0 account (the waitlist uses 1016).
+# Rate-limit namespace ids are account-wide. Sealbin owns the block 3500-3509:
+# top-level 3500, staging 3501, production 3502 (the waitlist uses 1016).
 [[unsafe.bindings]]
 name = "RATE_LIMITER"
 type = "ratelimit"
-namespace_id = "1017"
+namespace_id = "3500"
 simple = { limit = 100, period = 60 }
 
 [assets]
@@ -83,7 +83,7 @@ class_name = "SealObject"
 [[env.staging.unsafe.bindings]]
 name = "RATE_LIMITER"
 type = "ratelimit"
-namespace_id = "1017"
+namespace_id = "3501"
 simple = { limit = 100, period = 60 }
 
 [env.staging.assets]
@@ -130,7 +130,7 @@ class_name = "SealObject"
 [[env.production.unsafe.bindings]]
 name = "RATE_LIMITER"
 type = "ratelimit"
-namespace_id = "1017"
+namespace_id = "3502"
 simple = { limit = 100, period = 60 }
 
 [env.production.assets]
