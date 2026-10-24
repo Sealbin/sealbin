@@ -129,15 +129,17 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install worker-build (pinned to the worker 0.8.7 line)
         run: cargo install --locked worker-build --version 0.8.7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.6"
+      # Node stays here because this job runs a Node script: the check is a
+      # few hundred milliseconds of WebCrypto, and it needs no build.
       - uses: actions/setup-node@v7
         with:
           node-version: "24"
-      # Here because this is the one job that already has Node: the check is a
-      # few hundred milliseconds of WebCrypto, and it needs no build.
       - name: Check the agent key vectors with WebCrypto
         run: node spec/vectors/check-agent-keys.mjs
-      - name: Install wrangler
-        run: npm i -g wrangler@4
+      # No global wrangler install: smoke.sh falls back to `bunx wrangler@4`.
       - name: Build the Worker bundle
         working-directory: crates/sealbin-worker
         run: worker-build --release

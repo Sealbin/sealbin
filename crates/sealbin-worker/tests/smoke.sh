@@ -6,7 +6,7 @@
 # Nothing here touches a Cloudflare account: `--local` and `--persist-to` keep
 # every byte on this machine, and the temp directory is removed on exit.
 #
-# Needs: bash, curl, node, openssl, wrangler (or npx) and a built bundle
+# Needs: bash, curl, node, openssl, wrangler (or bunx) and a built bundle
 # (`worker-build --release`, run here if `build/worker/shim.mjs` is missing).
 set -euo pipefail
 
@@ -15,7 +15,7 @@ worker_dir=$(cd "$script_dir/.." && pwd)
 repo_root=$(cd "$worker_dir/../.." && pwd)
 
 WRANGLER=${WRANGLER:-wrangler}
-command -v "$WRANGLER" >/dev/null 2>&1 || WRANGLER="npx --yes wrangler@4"
+command -v "$WRANGLER" >/dev/null 2>&1 || WRANGLER="bunx wrangler@4"
 command -v node >/dev/null || { echo "smoke: node is required" >&2; exit 1; }
 command -v openssl >/dev/null || { echo "smoke: openssl is required" >&2; exit 1; }
 

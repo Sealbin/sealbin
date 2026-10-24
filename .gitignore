@@ -11,6 +11,8 @@ web/dist/
 
 # Node / Wrangler / Wrangler dev secrets
 node_modules/
+# npm lockfiles are never committed; installs go through bun
+package-lock.json
 .wrangler/
 .dev.vars
 

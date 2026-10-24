@@ -53,13 +53,10 @@ jobs:
       - name: Install worker-build (pinned to the worker 0.8.7 line)
         if: steps.guard.outputs.enabled == 'true'
         run: cargo install --locked worker-build --version 0.8.7
-      - uses: actions/setup-node@v7
+      - uses: oven-sh/setup-bun@v2
         if: steps.guard.outputs.enabled == 'true'
         with:
-          node-version: "24"
-      - name: Install wrangler
-        if: steps.guard.outputs.enabled == 'true'
-        run: npm i -g wrangler@4
+          bun-version: "1.3.6"
 
       - name: Build the web assets
         if: steps.guard.outputs.enabled == 'true'
@@ -68,9 +65,9 @@ jobs:
       - name: Apply the staging D1 migrations
         if: steps.guard.outputs.enabled == 'true'
         working-directory: crates/sealbin-worker
-        run: wrangler d1 migrations apply DB --env staging --remote
+        run: bunx wrangler@4 d1 migrations apply DB --env staging --remote
 
       - name: Deploy to staging
         if: steps.guard.outputs.enabled == 'true'
         working-directory: crates/sealbin-worker
-        run: wrangler deploy --env staging
+        run: bunx wrangler@4 deploy --env staging
